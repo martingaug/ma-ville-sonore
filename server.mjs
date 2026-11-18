@@ -117,7 +117,7 @@ async function getTracks() {
     updatedAt: cache?.updatedAt ?? null,
     stale: Boolean(warning && cache),
     message: warning,
-    tracks: (cache?.tracks ?? []).map(({coverSource, ...track}) => ({...track, coverUrl: coverSource ? "/api/cover?id=" + track.coverId : null})),
+    tracks: (cache?.tracks ?? []).map(({coverSource, ...track}) => ({...track, coverUrl: (coverSource || track.album) ? "/api/cover?id=" + track.coverId : null})),
   };
 }
 
@@ -163,7 +163,7 @@ const server = http.createServer(async (request, response) => {
   if (path === "/api/cover") {
     const id = new URL(request.url, "http://localhost").searchParams.get("id");
     const track = cache?.tracks.find(t => t.coverId === id);
-    const image = await coverImage(track?.coverSource);
+    const image = await coverImage(track, KEY);
     if (!image) {response.writeHead(404);response.end("Pochette indisponible");return;}
     response.writeHead(200,{"Content-Type":image.type,"Cache-Control":"public,max-age=3600","X-Content-Type-Options":"nosniff"});response.end(image.body);return;
   }
